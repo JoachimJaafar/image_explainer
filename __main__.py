@@ -2,7 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 
-from explainer.explainer import Explainer
+from explainer import Explainer
+
+import os
+import sys
 
 app = tk.Tk() 
 w = app.winfo_reqwidth()
@@ -11,11 +14,11 @@ ws = app.winfo_screenwidth()
 hs = app.winfo_screenheight()
 x = (ws/2) - (w/2)
 y = (hs/2) - (h/2)
-app.geometry('+%d+%d' % (x, y))
+app.geometry('200x200+%d+%d' % (x, y))
+app.resizable(width=0, height=0)
 
 labelTop = tk.Label(app,
-                    text = "Choose the model to use")
-labelTop.grid(column=0, row=0)
+                    text = "Choose the model to use.")
 
 values=[
     'alexnet', 
@@ -50,18 +53,27 @@ values=[
     'shufflenet_v2_x0_5',
     'shufflenet_v2_x1_0'
 ]
-
 comboExample = ttk.Combobox(app, state="readonly", values=values)
-print(dict(comboExample)) 
-comboExample.grid(column=0, row=1)
 comboExample.current(1)
 
 def run_main():
-    Explainer(comboExample.get(), values).main(askopenfilename())
+    labelTop.configure(text="Running ...")
+    file_path = ''
+    while file_path == '' or type(file_path) == tuple:
+        file_path = askopenfilename()
+    prediction = Explainer(comboExample.get(), values).main(file_path)
 
-button = tk.Button(app, text ="Hello", command = run_main)
-button.grid(column=0, row=2)
+    labelTop.configure(text="The classifier predicted : "+prediction.replace("_"," ")+". Choose the model to use.")
 
-print(comboExample.current(), comboExample.get())
+button = tk.Button(app, text ="Explain image", command = run_main)
 
-app.mainloop()
+labelTop.pack(expand=True)
+comboExample.pack(expand=True)
+button.pack(expand=True)
+
+try:
+    app.mainloop()
+except KeyboardInterrupt:
+    if os.path.exists('./tmp'):
+        os.rmdir('./tmp')
+    app.destroy()
