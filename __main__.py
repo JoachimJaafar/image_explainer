@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter.filedialog import askopenfilename
 
 from explainer.explainer import Explainer
 
@@ -56,7 +57,7 @@ comboExample.grid(column=0, row=1)
 comboExample.current(1)
 
 def run_main():
-    Explainer(comboExample.get(), values).main()
+    Explainer(comboExample.get(), values).main(askopenfilename())
 
 button = tk.Button(app, text ="Hello", command = run_main)
 button.grid(column=0, row=2)

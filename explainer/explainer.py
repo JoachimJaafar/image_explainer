@@ -14,10 +14,10 @@ from skimage.segmentation import mark_boundaries
 
 import glob
 import time
+import magic
 
 
 NOIR = np.array([0,0,0])
-PATH = os.path.dirname(os.path.realpath("__file__"))
 
 class Explainer:
     def __init__(self, model_name, model_names=[]):
@@ -115,9 +115,11 @@ class Explainer:
 
         return l[:top]
 
-    def generate_result_image(self, nom_image, size):
+    def generate_result_image(self, image_path, size):
 
-        img = self.get_image('./images/'+nom_image)
+        nom_image = image_path.split('/')[-1]
+
+        img = self.get_image(image_path)
 
         img_np = np.array(img)
         
@@ -152,18 +154,12 @@ class Explainer:
         img_to_save.save('./explained_images/' + nom_image)
 
 
-    def generate_all(self, nom_image, size):
-        image = self.get_image('./images/'+nom_image)
+    def generate_all(self, image_path, size):
+        image = self.get_image(image_path)
         self.generate_all_images(image, size)
-        self.generate_result_image(nom_image, size)
+        self.generate_result_image(image_path, size)
 
     def setup(self):
-        if not os.path.exists("./images"):
-            os.mkdir("./images")
-            print("Created /images/")
-
-        if len(os.listdir("./images")) == 0:
-            raise IndexError("There is no file in /images/.")
 
         if not os.path.exists("./explained_images"):
             os.mkdir("./explained_images")
@@ -179,19 +175,37 @@ class Explainer:
 
         os.rmdir("./explained_images/tmp")
 
-    def main(self):
+    def main(self, image_path):
         self.setup()
-        for image in os.listdir("./images"):
 
-            if os.path.exists("./explained_images/explained_"+image):
-                continue
+        run = True
 
-            img = self.get_image('./images/'+image)
+        if not 'image' in magic.Magic(mime=True).from_file(image_path).split('/')[0].strip():
+            raise ValueError(image_path," is not an image")
+
+        image = image_path.split('/')[-1]
+
+        if os.path.exists("./explained_images/"+image):
+            answer = input(image+" is already explained. Do you want to overwrite it ? (Y/N)\n")
+            while True:
+                if answer.upper() == 'N':
+                    run = False
+                    print("Explanation canceled.")
+                    break
+
+                elif answer.upper() == 'Y':
+                    break
+
+                else:
+                    answer = input("Incorrect input. Please try again. (Y/N)\n")
+
+        if run:
+            img = self.get_image(image_path)
             longueur,largeur = img.size
             
             size = max(longueur,largeur)
             size = int(size/10)
             
-            self.generate_all(image, size)
+            self.generate_all(image_path, size)
 
             print("Top prediction : ",self.top_predicted)
