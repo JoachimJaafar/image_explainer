@@ -169,7 +169,7 @@ class Explainer:
         run = True
 
         if not 'image' in magic.Magic(mime=True).from_file(image_path).split('/')[0].strip():
-            raise ValueError(image_path," is not an image")
+            return image_path+" is not an image."
 
         image = image_path.split('/')[-1]
 
@@ -196,4 +196,4 @@ class Explainer:
             
             self.generate_all(image_path, size)
 
-            return self.top_predicted
+            return "The classifier predicted : "+self.top_predicted.replace("_"," ")+". Choose the model to use."
