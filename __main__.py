@@ -7,7 +7,8 @@ from explainer import Explainer
 import os
 import sys
 
-app = tk.Tk() 
+app = tk.Tk()
+app.title("Image explainer")
 w = app.winfo_reqwidth()
 h = app.winfo_reqheight()
 ws = app.winfo_screenwidth()
@@ -24,8 +25,7 @@ def on_close():
 
 app.protocol("WM_DELETE_WINDOW",  on_close)
 
-labelTop = tk.Label(app,
-                    text = "Choose the model to use.")
+labelTop = tk.Label(app, text = "Choose the model to use (URL or file).")
 
 values=[
     'alexnet', 
@@ -63,26 +63,40 @@ values=[
 comboExample = ttk.Combobox(app, state="readonly", values=values)
 comboExample.current(1)
 
+url_entry = tk.Entry(app)
+
+is_url = tk.IntVar()
+
+checkbutton = tk.Checkbutton(app, text="Utiliser un URL", variable=is_url)
+
 is_running = False
 
 def run_main():
     global is_running
     if not is_running:
         is_running = True
-        file_path = askopenfilename()
-        if file_path == '' or type(file_path) != tuple:
+        image_path = ''
+        print(bool(is_url.get()))
+        if bool(is_url.get()):
+            image_path = url_entry.get()
+        else:
+            image_path = askopenfilename()
+
+        print("image path : '",image_path,"' ",type(image_path))
+        if image_path == '' or type(image_path) != tuple:
             labelTop.configure(text="Running ...")
             labelTop.update_idletasks()
-            prediction = Explainer(comboExample.get(), values).main(file_path)
+            prediction = Explainer(comboExample.get(), values).main(image_path, bool(is_url.get()))
             labelTop.configure(text=prediction)
         is_running = False
-    
 
 
 button = tk.Button(app, text ="Explain image", command = run_main)
 
 labelTop.pack(expand=True)
 comboExample.pack(expand=True)
+url_entry.pack(expand=True)
+checkbutton.pack(expand=True)
 button.pack(expand=True)
 
 try:

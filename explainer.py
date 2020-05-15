@@ -16,6 +16,10 @@ import glob
 import time
 import magic
 
+import requests
+from io import BytesIO
+
+
 
 NOIR = np.array([0,0,0])
 
@@ -30,10 +34,13 @@ class Explainer:
         else:
             raise KeyError("The chosen model does not exist, must be in ",model_names)
 
-    def get_image(self, path):
+    def get_image(self, path, is_url):
         """
         Returns image in correct format.
         """
+        if is_url:
+            resp = requests.get(path)
+            return Image.open(BytesIO(resp.content)).convert('RGB')
         with open(os.path.abspath(path), 'rb') as f:
             with Image.open(f) as img:
                 return img.convert('RGB')
@@ -114,9 +121,9 @@ class Explainer:
 
         return l[:top]
 
-    def generate_result_image(self, image_path, size):
+    def generate_result_image(self, image_path, size, is_url):
 
-        img = self.get_image(image_path)
+        img = self.get_image(image_path, is_url)
 
         img_np = np.array(img)
         
@@ -149,10 +156,10 @@ class Explainer:
         img_to_save.show(title=nom_image)
 
 
-    def generate_all(self, image_path, size):
-        image = self.get_image(image_path)
+    def generate_all(self, image_path, size, is_url):
+        image = self.get_image(image_path, is_url)
         self.generate_all_images(image, size)
-        self.generate_result_image(image_path, size)
+        self.generate_result_image(image_path, size, is_url)
 
     def setup(self):
         if not os.path.exists("./tmp"):
@@ -163,13 +170,17 @@ class Explainer:
             os.remove("./tmp/" + tmp_file)
         os.rmdir("./tmp")
 
-    def main(self, image_path):
+    def main(self, image_path, is_url):
         self.setup()
 
         run = True
 
-        if not 'image' in magic.Magic(mime=True).from_file(image_path).split('/')[0].strip():
-            return image_path+" is not an image."
+        if not is_url:
+            if not magic.Magic(mime=True).from_file(image_path) in ("image/png", "image/jpeg", "image/jpg"):
+                return "This file is not an image."
+        else:
+            if not requests.head(image_path).headers["content-type"] in ("image/png", "image/jpeg", "image/jpg"):
+                return "This URL is not an image."
 
         image = image_path.split('/')[-1]
 
@@ -188,12 +199,12 @@ class Explainer:
                     answer = input("Incorrect input. Please try again. (Y/N)\n")
 
         if run:
-            img = self.get_image(image_path)
+            img = self.get_image(image_path, is_url)
             longueur,largeur = img.size
             
             size = max(longueur,largeur)
             size = int(size/10)
             
-            self.generate_all(image_path, size)
+            self.generate_all(image_path, size, is_url)
 
             return "The classifier predicted : "+self.top_predicted.replace("_"," ")+". Choose the model to use."
