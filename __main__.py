@@ -82,6 +82,8 @@ def run_main():
         else:
             image_path = askopenfilename()
 
+        image_path = image_path.strip()
+
         print("image path : '",image_path,"' ",type(image_path))
         if image_path == '' or type(image_path) != tuple:
             labelTop.configure(text="Running ...")
