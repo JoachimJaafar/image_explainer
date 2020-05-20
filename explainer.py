@@ -189,7 +189,6 @@ class Explainer:
             while True:
                 if answer.upper() == 'N':
                     run = False
-                    print("Explanation canceled.")
                     break
 
                 elif answer.upper() == 'Y':

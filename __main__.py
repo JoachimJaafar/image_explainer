@@ -76,7 +76,6 @@ def run_main():
     if not is_running:
         is_running = True
         image_path = ''
-        print(bool(is_url.get()))
         if bool(is_url.get()):
             image_path = url_entry.get()
         else:
