@@ -82,10 +82,8 @@ def run_main():
         else:
             image_path = askopenfilename()
 
-        image_path = image_path.strip()
-
-        print("image path : '",image_path,"' ",type(image_path))
-        if image_path == '' or type(image_path) != tuple:
+        if image_path != '' and type(image_path) != tuple:
+            image_path = image_path.strip()
             labelTop.configure(text="Running ...")
             labelTop.update_idletasks()
             prediction = Explainer(comboExample.get(), values).main(image_path, bool(is_url.get()))
