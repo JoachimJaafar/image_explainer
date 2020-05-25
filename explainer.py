@@ -177,25 +177,12 @@ class Explainer:
 
         if not is_url:
             if not magic.Magic(mime=True).from_file(image_path) in ("image/png", "image/jpeg", "image/jpg"):
+                self.clean()
                 return "This file is not an image."
         else:
             if not requests.head(image_path).headers["content-type"] in ("image/png", "image/jpeg", "image/jpg"):
+                self.clean()
                 return "This URL is not an image."
-
-        image = image_path.split('/')[-1]
-
-        if os.path.exists("./"+image):
-            answer = input(image+" is already explained. Do you want to overwrite it ? (Y/N)\n")
-            while True:
-                if answer.upper() == 'N':
-                    run = False
-                    break
-
-                elif answer.upper() == 'Y':
-                    break
-
-                else:
-                    answer = input("Incorrect input. Please try again. (Y/N)\n")
 
         if run:
             img = self.get_image(image_path, is_url)

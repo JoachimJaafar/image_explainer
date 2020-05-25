@@ -27,7 +27,7 @@ app.protocol("WM_DELETE_WINDOW",  on_close)
 
 labelTop = tk.Label(app, text = "Choose the model to use (URL or file).")
 
-values=[
+models=[
     'alexnet', 
     'resnet18', 
     'resnet34',
@@ -60,14 +60,14 @@ values=[
     'shufflenet_v2_x0_5',
     'shufflenet_v2_x1_0'
 ]
-comboExample = ttk.Combobox(app, state="readonly", values=values)
+comboExample = ttk.Combobox(app, state="readonly", values=models)
 comboExample.current(1)
 
 url_entry = tk.Entry(app)
 
 is_url = tk.IntVar()
 
-checkbutton = tk.Checkbutton(app, text="Utiliser un URL", variable=is_url)
+checkbutton = tk.Checkbutton(app, text="I am using a URL", variable=is_url)
 
 is_running = False
 
@@ -85,7 +85,7 @@ def run_main():
             image_path = image_path.strip()
             labelTop.configure(text="Running ...")
             labelTop.update_idletasks()
-            prediction = Explainer(comboExample.get(), values).main(image_path, bool(is_url.get()))
+            prediction = Explainer(comboExample.get(), models).main(image_path, bool(is_url.get()))
             labelTop.configure(text=prediction)
         is_running = False
 
@@ -101,6 +101,4 @@ button.pack(expand=True)
 try:
     app.mainloop()
 except KeyboardInterrupt:
-    if os.path.exists('./tmp'):
-        os.rmdir('./tmp')
-    app.destroy()
+    on_close()
