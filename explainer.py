@@ -173,24 +173,28 @@ class Explainer:
     def main(self, image_path, is_url):
         self.setup()
 
-        run = True
-
         if not is_url:
             if not magic.Magic(mime=True).from_file(image_path) in ("image/png", "image/jpeg", "image/jpg"):
                 self.clean()
                 return "This file is not an image."
         else:
-            if not requests.head(image_path).headers["content-type"] in ("image/png", "image/jpeg", "image/jpg"):
-                self.clean()
-                return "This URL is not an image."
+            try:
+                if not requests.head(image_path).headers["content-type"] in ("image/png", "image/jpeg", "image/jpg"):
+                    self.clean()
+                    return "This URL is not an image."
+            except requests.exceptions.InvalidSchema:
+                return "No connection adapters were found for this URL."
+            except requests.exceptions.MissingSchema:
+                return "Invalid URL '"+image_path+"': No schema supplied. Perhaps you meant http://"+image_path+"?"
+            except Exception as e:
+                return "An unknown exception has been caught" + (" : " + e.message if hasattr(e, "message") else "") + ". Please send this message to the developper."
 
-        if run:
-            img = self.get_image(image_path, is_url)
-            longueur,largeur = img.size
-            
-            size = max(longueur,largeur)
-            size = int(size/10)
-            
-            self.generate_all(image_path, size, is_url)
+        img = self.get_image(image_path, is_url)
+        longueur,largeur = img.size
+        
+        size = max(longueur,largeur)
+        size = int(size/10)
+        
+        self.generate_all(image_path, size, is_url)
 
-            return "The classifier predicted : "+self.top_predicted.replace("_"," ")+". Choose the model to use."
+        return "The classifier predicted : "+self.top_predicted.replace("_"," ")+". Choose the model to use."
