@@ -17,7 +17,7 @@ lime==0.2.0.0
 matplotlib==3.2.1
 networkx==2.4
 numpy==1.18.4
-Pillow>=6.2.2
+Pillow==5.4.1
 pygraphviz==1.5
 pyparsing==2.4.7
 pytest-cov==2.8.1
