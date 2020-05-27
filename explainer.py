@@ -19,10 +19,6 @@ import magic
 import requests
 from io import BytesIO
 
-
-
-NOIR = np.array([0,0,0])
-
 class Explainer:
     def __init__(self, model_name, model_names=[]):
         """
@@ -63,7 +59,9 @@ class Explainer:
             return transf(img).unsqueeze(0)
 
     def get_top_class(self, img):
-
+        """
+        Returns a tuple : the label of the top 1 predicted class, and its probability.
+        """
         idx2label = []
         with open(os.path.abspath('./labels_map.json'), 'r') as read_file:
             class_idx = json.load(read_file)
@@ -80,18 +78,23 @@ class Explainer:
         return tupl[0][2], tupl[0][0]
 
     def generate_image(self, img,long,larg,x,y,i):
+        """
+        Generate a temporary image used for the final result.
+        """
         img_np = np.array(img)
         for lo in range(len(img_np)):
             for la in range(len(img_np[0])):
                 if not(x * long < lo < ((x+1) * long) and y * larg < la < ((y+1) * larg)):
                     continue
-                img_np[lo][la] = NOIR
+                img_np[lo][la] = np.array([0,0,0])
 
         img_to_save = Image.fromarray(img_np)
         img_to_save.save('./tmp/tmp' + str(i) + '.jpg')
 
     def generate_all_images(self, img, size):
-
+        """
+        Generate all the temporary images.
+        """
         long, larg = img.size
         i=0
         for la in range(larg//size):
@@ -101,6 +104,9 @@ class Explainer:
 
 
     def get_stats(self, img_originale, top):
+        """
+        Get the first [top] best temporary images according to their probability of getting the top predicted class.
+        """
         self.top_predicted = self.get_top_class(img_originale)[0]
 
         l_mauvais = []
@@ -122,7 +128,9 @@ class Explainer:
         return l[:top]
 
     def generate_result_image(self, image_path, size, is_url):
-
+        """
+        Generate the final image.
+        """
         img = self.get_image(image_path, is_url)
 
         img_np = np.array(img)
@@ -141,12 +149,12 @@ class Explainer:
                 i+=1
                 for j in range(la*size,(la+1)*size):
                     for k in range(lo*size,(lo+1)*size):
-                        img_np[j][k] = NOIR
+                        img_np[j][k] = np.array([0,0,0])
 
         for la in range(len(img_np)):
             for lo in range(len(img_np[0])):
                 if lo >= long*size or la >= larg*size:
-                    img_np[la][lo] = NOIR
+                    img_np[la][lo] = np.array([0,0,0])
                     
         self.clean()
 
@@ -157,15 +165,24 @@ class Explainer:
 
 
     def generate_all(self, image_path, size, is_url):
+        """
+        Generate all temporary images and the final result.
+        """
         image = self.get_image(image_path, is_url)
         self.generate_all_images(image, size)
         self.generate_result_image(image_path, size, is_url)
 
     def setup(self):
+        """
+        Create a /tmp/ directory where the temporary images will be stored (if it does not exist already).
+        """
         if not os.path.exists("./tmp"):
             os.mkdir("./tmp")
 
     def clean(self):
+        """
+        Remove the /tmp/ directory.
+        """
         for tmp_file in os.listdir("./tmp"):
             os.remove("./tmp/" + tmp_file)
         os.rmdir("./tmp")
